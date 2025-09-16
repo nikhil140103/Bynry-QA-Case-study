@@ -1,0 +1,65 @@
+Test Framework Design
+>> 1️ Framework Structure
+
+Simple, scalable, maintainable structure for B2B SaaS platform:
+
+qa_framework/
+├── tests/                 # Test cases (UI + API)
+│   ├── test_login.py
+│   └── test_projects.py
+├── config/                # Environment configuration
+│   └── config.yaml
+├── data/                  # Test data
+│   └── test_data.json
+├── utils/                 # Helper functions
+│   ├── api_helper.py
+│   └── browser_helper.py
+├── reports/               # Test reports
+│   └── test_report.html
+├── logs/                  # Execution logs
+├── README.md              # Framework overview + how to run
+├── requirements.txt       # Dependencies
+
+>> 2️ Configuration Management
+
+Multiple environments (dev, staging, production) handled via config.yaml:
+
+env: staging
+browser: chrome
+tenant_id: company1
+base_url: "https://app.workflowpro.com"
+
+
+Test data handled via JSON (test_data.json)
+
+BrowserStack credentials or mobile device info can be stored securely in env variables
+
+>> 3️ Base Classes / Utilities
+
+BaseTest: Setup/teardown for all tests (launch browser, login)
+
+APIHelper: Functions for API calls (GET, POST, PUT, DELETE)
+
+BrowserHelper: Functions for waits, screenshots, dynamic element handling
+
+>> 4️ Missing Requirements / Questions
+
+How should test data be cleaned after tests?
+
+Parallel execution: allowed or not?
+
+Reporting format (HTML, JSON, console summary)?
+
+Mobile device coverage: real devices or simulators?
+
+Retry strategy for flaky tests?
+
+>> 5 Key Points
+
+Multi-tenant support: Each tenant has own subdomain → config drives test execution
+
+Role-based testing: Admin, Manager, Employee roles handled via login fixtures
+
+CI/CD integration: Tests triggered automatically on code merge → consistent validation
+
+Cross-platform: Web (Chrome, Firefox, Safari) + Mobile (iOS, Android via BrowserStack)
