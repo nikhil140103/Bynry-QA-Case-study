@@ -13,3 +13,11 @@ It includes:
 Install dependencies:
 bash
 pip install -r requirements.txt
+
+Run tests:
+
+Part 1
+pytest flaky_test_fix.py
+
+Part 3
+pytest integration_test.py
