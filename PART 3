@@ -1,0 +1,83 @@
+API + UI Integration Test
+>> 1️ Business Scenario
+
+Create a project via API
+
+Verify project appears in Web UI
+
+Validate on Mobile (BrowserStack)
+
+Ensure proper tenant isolation (project visible only to correct company)
+
+>> 2️ Step-by-Step Approach
+
+Step 1: API Layer
+
+Endpoint: POST /api/v1/projects
+
+Headers: 
+{
+  "Authorization": "Bearer {token}",
+  "X-Tenant-ID": "{company_id}"
+}
+
+Body:
+
+{
+  "name": "Test Project",
+  "description": "Sample Project",
+  "team_members": ["user1","user2"]
+}
+
+Step 2: Web UI Verification
+
+Login as Admin using Playwright
+
+Wait for dashboard to load
+
+Wait for project card element corresponding to project ID
+
+Assert project is visible
+
+Step 3: Mobile Verification (BrowserStack)
+
+Simulate mobile viewport or real device
+
+Login → Check project card visible
+
+Ensure responsive design works
+
+Step 4: Tenant Isolation Verification
+
+Attempt to access project from different tenant → Expect failure / 404
+
+Ensure data not leaked across tenants
+
+>> 3️ Sample Integration Test Code
+
+import requests
+from playwright.sync_api import sync_playwright, TimeoutError
+
+def test_project_creation_flow():
+    # --- API: Create project ---
+    headers = {"Authorization":"Bearer token","X-Tenant-ID":"company1"}
+    body = {"name":"Test Project","description":"Sample Project","team_members":["user1"]}
+    response = requests.post("https://app.workflowpro.com/api/v1/projects", headers=headers, json=body)
+    assert response.status_code == 201
+    project_id = response.json()["id"]
+
+    # --- Web UI Verification ---
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.goto("https://app.workflowpro.com/login")
+        page.fill("#email","admin@company1.com")
+        page.fill("#password","password123")
+        page.click("#login-btn")
+        try:
+            page.wait_for_url("https://app.workflowpro.com/dashboard", timeout=15000)
+            page.wait_for_selector(f"#project-{project_id}", timeout=10000)
+            assert page.locator(f"#project-{project_id}").is_visible()
+        except TimeoutError:
+            assert False, "Project not visible on Web UI"
+        browser.close()
