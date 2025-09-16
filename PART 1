@@ -1,5 +1,4 @@
-Part 1: Debugging Flaky Test Code
-1️⃣ Flakiness Issues Identified
+>> 1️ Flakiness Issues Identified
 
 No wait after login click – Dashboard elements load dynamically → test sometimes fails.
 
@@ -9,7 +8,7 @@ Immediate fetch of project cards – Multi-tenant data loads at different speeds
 
 Hard-coded browser viewport / no wait for elements – CI/CD may run on slower environment → test fails.
 
-2️⃣ Root Causes
+>> 2️ Root Causes
 
 Timing issues: CI/CD environment is slower, has network latency, or different browser versions → test fails sometimes.
 
@@ -19,7 +18,7 @@ Dynamic content: Elements on dashboard load asynchronously → without explicit 
 
 Multi-tenant differences: Different tenants load at different speeds → sometimes elements not yet visible when assertions run.
 
-3️⃣ Fixes / Corrected Version
+>> 3️ Fixes / Corrected Version
 import pytest
 from playwright.sync_api import sync_playwright, TimeoutError
 
@@ -70,7 +69,7 @@ def test_multi_tenant_access():
         
         browser.close()
 
-4️⃣ Key Improvements
+>> 4️ Key Improvements
 
 Explicit waits: wait_for_url and wait_for_selector used for dynamic loading.
 
@@ -80,7 +79,7 @@ Multi-tenant reliability: Ensures projects are fully loaded before assertion.
 
 CI/CD stability: Test now works on slower or different browser environments.
 
-5️⃣ Assumptions
+>> 5️ Assumptions
 
 2FA is disabled for test accounts.
 
