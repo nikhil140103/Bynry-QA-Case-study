@@ -1,0 +1,89 @@
+Part 1: Debugging Flaky Test Code
+1️⃣ Flakiness Issues Identified
+
+No wait after login click – Dashboard elements load dynamically → test sometimes fails.
+
+2FA not handled – Some users have 2FA enabled → intermittent failures.
+
+Immediate fetch of project cards – Multi-tenant data loads at different speeds → flaky results.
+
+Hard-coded browser viewport / no wait for elements – CI/CD may run on slower environment → test fails.
+
+2️⃣ Root Causes
+
+Timing issues: CI/CD environment is slower, has network latency, or different browser versions → test fails sometimes.
+
+Dynamic content: Elements on dashboard load asynchronously → without explicit waits, assertions fail.
+
+2FA variability: Some accounts require 2FA → test doesn’t handle it.
+
+Multi-tenant differences: Different tenants load at different speeds → sometimes elements not yet visible when assertions run.
+
+3️⃣ Fixes / Corrected Version
+import pytest
+from playwright.sync_api import sync_playwright, TimeoutError
+
+def test_user_login():
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        
+        # Navigate to login page
+        page.goto("https://app.workflowpro.com/login")
+        
+        # Fill login form
+        page.fill("#email", "admin@company1.com")
+        page.fill("#password", "password123")
+        page.click("#login-btn")
+        
+        # Wait for dashboard URL to ensure login is complete
+        try:
+            page.wait_for_url("https://app.workflowpro.com/dashboard", timeout=15000)
+            # Wait for dynamic elements
+            page.wait_for_selector(".welcome-message", timeout=10000)
+            assert page.locator(".welcome-message").is_visible()
+        except TimeoutError:
+            assert False, "Dashboard did not load properly, flaky test fixed"
+        
+        browser.close()
+
+
+def test_multi_tenant_access():
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        
+        page.goto("https://app.workflowpro.com/login")
+        page.fill("#email", "user@company2.com")
+        page.fill("#password", "password123")
+        page.click("#login-btn")
+        
+        # Wait for dashboard and projects to load dynamically
+        try:
+            page.wait_for_url("https://app.workflowpro.com/dashboard", timeout=15000)
+            page.wait_for_selector(".project-card", timeout=10000)
+            projects = page.locator(".project-card").all()
+            for project in projects:
+                assert "Company2" in project.text_content()
+        except TimeoutError:
+            assert False, "Projects did not load properly for tenant Company2"
+        
+        browser.close()
+
+4️⃣ Key Improvements
+
+Explicit waits: wait_for_url and wait_for_selector used for dynamic loading.
+
+Error handling: TimeoutError catch → meaningful assertion failure.
+
+Multi-tenant reliability: Ensures projects are fully loaded before assertion.
+
+CI/CD stability: Test now works on slower or different browser environments.
+
+5️⃣ Assumptions
+
+2FA is disabled for test accounts.
+
+Project cards have consistent .project-card locators.
+
+CI/CD browsers support Chromium for Playwright.
